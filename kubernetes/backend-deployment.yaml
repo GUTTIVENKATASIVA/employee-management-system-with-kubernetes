@@ -1,0 +1,51 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: venkygutti03/employee-backend:v1
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: MONGO_HOST
+              value: mongodb
+            - name: MONGO_PORT
+              value: "27017"
+            - name: MONGO_DB_NAME
+              value: employee_db
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_USERNAME
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_PASSWORD
+            - name: SEED_ON_START
+              value: "true"
+            - name: SEED_FILE
+              value: /seed/sample-employees.json
+          volumeMounts:
+            - name: employee-seed
+              mountPath: /seed/sample-employees.json
+              subPath: sample-employees.json
+      volumes:
+        - name: employee-seed
+          configMap:
+            name: employee-seed
